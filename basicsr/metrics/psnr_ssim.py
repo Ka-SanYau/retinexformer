@@ -6,6 +6,83 @@ import skimage.metrics
 import torch
 
 
+import lpips
+
+lpips_model = lpips.LPIPS(net='alex')
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+lpips_model = lpips_model.to(device)  # Move model to the appropriate device
+
+def calculate_lpips(img, img2, crop_border, input_order='HWC', test_y_channel=False, **kwargs):
+    """Calculate LPIPS (Learned Perceptual Image Patch Similarity).
+
+    Args:
+        img (ndarray/tensor): Image 1, with range [0, 1].
+        img2 (ndarray/tensor): Image 2, with range [0, 1].
+        input_order (str): Whether the input order is 'HWC' or 'CHW'.
+            Default: 'HWC'.
+
+    Returns:
+        float: LPIPS similarity result.
+    """
+    
+    # Ensure the input images have the same shape
+    assert img.shape == img2.shape, (
+        f'Image shapes are different: {img.shape}, {img2.shape}.')
+    
+    if input_order not in ['HWC', 'CHW']:
+        raise ValueError(
+            f'Wrong input_order {input_order}. Supported input_orders are '
+            '"HWC" and "CHW"')
+
+    # print("img. shape: ", img.shape)
+    # print("img2. shape: ", img2.shape)
+    
+    # Convert images to PyTorch tensors if they are numpy arrays
+
+        
+    if test_y_channel:
+        img = to_y_channel(img)
+        img2 = to_y_channel(img2)
+        
+    if isinstance(img, np.ndarray):
+        img = torch.from_numpy(img.transpose(2, 0, 1)).unsqueeze(0)
+    if isinstance(img2, np.ndarray):
+        img2 = torch.from_numpy(img2.transpose(2, 0, 1)).unsqueeze(0)
+
+
+    if img.dtype != torch.float32:
+        img = img.float()
+    if img2.dtype != torch.float32:
+        img2 = img2.float()
+
+    if crop_border != 0:
+        img = img[crop_border:-crop_border, crop_border:-crop_border, ...]
+        img2 = img2[crop_border:-crop_border, crop_border:-crop_border, ...]
+
+    
+    # print (img.max())
+    # Ensure the pixel values are in the range [0, 1]
+    if img.max() > 1.0 or img2.max() > 1.0:
+        # print("img.max(): ", img.max())
+        img = img / 255.0
+        img2 = img2 / 255.0
+
+    # img = img * 2 - 1
+    # img2 = img2 * 2 - 1
+
+    # Calculate LPIPS
+    img = img.to(device)
+    img2 = img2.to(device)
+
+
+
+    lpips_value = lpips_model.forward(img, img2, normalize=True)
+    
+    return lpips_value.item()
+
+
+
 def calculate_psnr(img1,
                    img2,
                    crop_border,

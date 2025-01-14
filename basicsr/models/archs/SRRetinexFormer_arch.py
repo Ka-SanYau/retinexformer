@@ -448,13 +448,14 @@ class RetinexFormer_Single_Stage(nn.Module):
         return output_img
 
 
-class RetinexFormer(nn.Module):
+class SRRetinexFormer(nn.Module):
     def __init__(self, in_channels=3, out_channels=3, n_feat=31, stage=3, num_blocks=[1,1,1], cat_poe=False, add_meance=False):
-        super(RetinexFormer, self).__init__()
+        super(SRRetinexFormer, self).__init__()
         self.stage = stage
         self.cat_poe = cat_poe
         modules_body = [RetinexFormer_Single_Stage(in_channels=in_channels, out_channels=out_channels, n_feat=n_feat, level=2, num_blocks=num_blocks, cat_poe=cat_poe, add_meance=add_meance)
                         for _ in range(stage)]
+        # modules_body[0].get_parameter
         
         self.body = nn.Sequential(*modules_body)
     
