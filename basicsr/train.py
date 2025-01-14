@@ -96,6 +96,7 @@ def init_loggers(opt):
 def create_train_val_dataloader(opt, logger):  #train loader 和 val loader 一起构建
     # create train and val dataloaders
     train_loader, val_loader = None, None
+    # val_loaders = []
     for phase, dataset_opt in opt['datasets'].items():
         # stx()
         if phase == 'train':
@@ -141,6 +142,7 @@ def create_train_val_dataloader(opt, logger):  #train loader 和 val loader 一�
             logger.info(
                 f'Number of val images/folders in {dataset_opt["name"]}: '
                 f'{len(val_set)}')
+            # val_loaders.append(val_loader)
         else:
             raise ValueError(f'Dataset phase {phase} is not recognized.')
 
